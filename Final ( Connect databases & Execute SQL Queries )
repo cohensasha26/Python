@@ -1,0 +1,87 @@
+                                                    ----These are the taken steps to download, load & connect databases to then use SQL magic for SQL queries ----
+
+# Install ipython-sql & Prettytable:
+
+!pip install ipython-sql prettytable
+import prettytable
+
+prettytable.DEFAULT = 'DEFAULT'
+
+#Load the pandas and sqlite3 libraries and establish a connection to 'FinalDB.db':
+
+import csv, sqlite3
+
+conn = sqlite3.connect("FinalDB.db")
+cur = conn.cursor()
+
+!pip install pandas
+
+%load_ext sql
+
+#Use Pandas to load the data available in the links above to dataframes. Use these dataframes to load data on to the database FinalDB.db as required tables:
+import pandas
+
+#load data for census data
+df1= pandas.read_csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DB0201EN-SkillsNetwork/labs/FinalModule_Coursera_V5/data/ChicagoCensusData.csv?utm_medium=Exinfluencer&utm_source=Exinfluencer&utm_content=000026UJ&utm_term=10006555&utm_id=NA-SkillsNetwork-Channel-SkillsNetworkCoursesIBMDeveloperSkillsNetworkDB0201ENSkillsNetwork20127838-2021-01-01')
+df1.to_sql("CHICAGO_CENSUS_DATA", conn, if_exists='replace', index=False, method="multi")
+
+#load data for public schools data
+df2= pandas.read_csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DB0201EN-SkillsNetwork/labs/FinalModule_Coursera_V5/data/ChicagoPublicSchools.csv?utm_medium=Exinfluencer&utm_source=Exinfluencer&utm_content=000026UJ&utm_term=10006555&utm_id=NA-SkillsNetwork-Channel-SkillsNetworkCoursesIBMDeveloperSkillsNetworkDB0201ENSkillsNetwork20127838-2021-01-01')
+df2.to_sql("CHICAGO_PUBLIC_SCHOOLS", conn,  if_exists='replace', index=False, method="multi")
+
+#load data for crime data
+df3= pandas.read_csv('https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DB0201EN-SkillsNetwork/labs/FinalModule_Coursera_V5/data/ChicagoCrimeData.csv?utm_medium=Exinfluencer&utm_source=Exinfluencer&utm_content=000026UJ&utm_term=10006555&utm_id=NA-SkillsNetwork-Channel-SkillsNetworkCoursesIBMDeveloperSkillsNetworkDB0201ENSkillsNetwork20127838-2021-01-01')
+df3.to_sql("CHICAGO_CRIME_DATA", conn, if_exists='replace', index=False, method="multi")
+
+#Establish a connection between SQL magic module and the database `FinalDB.db`:
+
+%sql sqlite:///FinalDB.db
+
+                                                                    -----These are the problems that are solved using SQL queries ----
+
+#Problem 1: Find the total number of crimes recorded in the CRIME table:
+
+%sql SELECT COUNT(*) FROM CHICAGO_CRIME_DATA;
+
+#Problem 2: List community area names and numbers with per capita income less than 11000:
+
+%sql SELECT community_area_name, per_capita_income FROM chicago_census_data WHERE per_capita_income < 11000;
+
+#Problem 3: List all case numbers for crimes involving minors?(children are not considered minors for the purposes of crime analysis):
+
+%sql SELECT case_number, primary_type, description FROM chicago_crime_data WHERE description LIKE '%MINOR%';
+
+#Problem 4: List all kidnapping crimes involving a child?:
+
+%sql SELECT case_number, primary_type, description FROM chicago_crime_data WHERE description LIKE '%CHILD ABDUCTION%';
+
+#Problem 5: List the kind of crimes that were recorded at schools. (No repetitions):
+
+%sql SELECT DISTINCT(PRIMARY_TYPE), location_description FROM chicago_crime_data WHERE location_description LIKE '%SCHOOL%';
+
+#Problem 6: List the type of schools along with the average safety score for each type:
+
+%sql SELECT "Elementary, Middle, or High school", AVG(safety_score) AS average_safety_score FROM chicago_public_schools \
+    GROUP BY "Elementary, Middle, or High school";
+
+#Problem 7: List 5 community areas with highest % of households below poverty line:
+
+%sql SELECT community_area_name, percent_households_below_poverty FROM chicago_census_data \
+    ORDER BY percent_households_below_poverty DESC LIMIT 5;
+
+#Problem 8: Which community area is most crime prone? Display the coumminty area number only:
+
+%sql SELECT community_area_number FROM chicago_crime_data \
+    GROUP BY community_area_number \
+    ORDER BY COUNT(*) DESC LIMIT 1;
+
+#Problem 9: Use a sub-query to find the name of the community area with highest hardship index:
+
+%sql SELECT community_area_name, hardship_index FROM chicago_census_data WHERE hardship_index IN (SELECT MAX(hardship_index) FROM chicago_census_data);
+
+#Problem 10: Use a sub-query to determine the Community Area Name with most number of crimes?:
+
+%sql SELECT community_area_number, community_area_name FROM chicago_census_data \
+    WHERE community_area_number = (SELECT community_area_number FROM chicago_crime_data \
+    GROUP BY community_area_number \
+    ORDER BY COUNT(*) DESC);
