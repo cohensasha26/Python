@@ -29,12 +29,13 @@ import matplotlib.pyplot as plt
 
 //Exercise 2: Create a dataframe from a csv file and display the size of the dataframe//
 
-path = 'https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-CD0198EN-SkillsNetwork/labs/data/Annual_Macroeconomic_Factors.csv'
-await download(path, "Annual_Macroeconomic_Factors.csv")
-path="Annual_Macroeconomic_Factors.csv"
+url = 'https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-CD0198EN-SkillsNetwork/labs/data/Annual_Macroeconomic_Factors.csv'
 
-data = pd.read_csv(path)  
-data.head(5)
+df = pd.read_csv(url)
+
+# Preview the data
+df.head()
+
 
 //Exercise 3: Create a reduced dataframe by dropping Stock_Price_Index//
 
